@@ -62,7 +62,18 @@ const todayStr = () => new Date().toLocaleDateString("en-GB", { day: "2-digit", 
 
 const TABS = ["Profile & Payment", "Clients", "New Invoice", "History"];
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+};
+
 export default function App() {
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState(2);
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [payments, setPayments] = useState(DEFAULT_PAYMENTS);
@@ -167,6 +178,7 @@ export default function App() {
   const btn = { padding: "8px 18px", border: "1.5px solid #111", borderRadius: 7, cursor: "pointer", fontSize: 13, background: "#111", color: "#fff", fontWeight: 500 };
   const btnOutline = { padding: "8px 18px", border: "1.5px solid #111", borderRadius: 7, cursor: "pointer", fontSize: 13, background: "transparent", color: "var(--color-text-primary)", fontWeight: 500 };
   const card = { background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 10, padding: "14px 18px" };
+  const col2 = { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 };
 
   const renderPayField = (k, val, onChange) => {
     if (k === "bankAddress") return <textarea style={{ ...inp, height: 50, resize: "vertical" }} value={val} onChange={onChange} />;
@@ -281,12 +293,14 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: "#F8F8F8", minHeight: "100vh", padding: "24px 16px" }}>
-      <div style={{ maxWidth: 740, margin: "0 auto", background: "#fff", border: "1px solid #EAEAEA", borderRadius: 8, padding: "24px 28px" }}>
+    <div style={{ background: "#F8F8F8", minHeight: "100vh", padding: isMobile ? "12px 8px" : "24px 16px" }}>
+      <div style={{ maxWidth: 740, margin: "0 auto", background: "#fff", border: "1px solid #EAEAEA", borderRadius: 8, padding: isMobile ? "16px 14px" : "24px 28px" }}>
         <h2 style={{ fontSize: 0, margin: 0 }}>Invoice Generator</h2>
-        <div style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "1px solid #e0e0e0" }}>
+
+        {/* TABS */}
+        <div style={{ display: "flex", marginBottom: 20, borderBottom: "1px solid #e0e0e0", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           {TABS.map((t, i) => (
-            <button key={t} onClick={() => { setTab(i); if (i === 1) setEditingClient(null); }} style={{ border: "none", background: "none", borderBottom: tab === i ? "2px solid #6c47ff" : "2px solid transparent", padding: "10px 18px", fontWeight: tab === i ? 600 : 400, cursor: "pointer", fontSize: 13, color: tab === i ? "#6c47ff" : "var(--color-text-secondary)", borderRadius: 0, marginBottom: -1 }}>{t}</button>
+            <button key={t} onClick={() => { setTab(i); if (i === 1) setEditingClient(null); }} style={{ border: "none", background: "none", borderBottom: tab === i ? "2px solid #6c47ff" : "2px solid transparent", padding: isMobile ? "10px 12px" : "10px 18px", fontWeight: tab === i ? 600 : 400, cursor: "pointer", fontSize: isMobile ? 12 : 13, color: tab === i ? "#6c47ff" : "var(--color-text-secondary)", borderRadius: 0, marginBottom: -1, whiteSpace: "nowrap", flexShrink: 0 }}>{t}</button>
           ))}
         </div>
 
@@ -295,7 +309,7 @@ export default function App() {
           <div style={{ display: "grid", gap: 16 }}>
             <div style={card}>
               <div style={{ fontWeight: 500, marginBottom: 14 }}>Your profile</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={col2}>
                 {[["Full Name","name"],["Title / Role","title"],["Phone","phone"],["Email","email"]].map(([l, k]) => (
                   <div key={k}><label style={lbl}>{l}</label><input style={inp} value={profile[k] || ""} onChange={e => setProfile(p => ({ ...p, [k]: e.target.value }))} /></div>
                 ))}
@@ -304,7 +318,7 @@ export default function App() {
             </div>
             <div style={card}>
               <div style={{ fontWeight: 500, marginBottom: 14 }}>Payment channels by currency</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 10, marginBottom: 18 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 8, marginBottom: 18 }}>
                 {CURRENCIES.map(c => {
                   const isActive = activeCur === c.code;
                   const filled = Object.entries(payments[c.code] || {}).some(([k, v]) => k !== "method" && v);
@@ -322,7 +336,7 @@ export default function App() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                   {CURRENCIES.find(c => c.code === activeCur)?.name} — {activeCur}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={col2}>
                   {(CURRENCY_FIELDS[activeCur] || []).map(([l, k]) => (
                     <div key={k} style={k === "bankAddress" ? { gridColumn: "1/-1" } : {}}>
                       <label style={lbl}>{l}</label>
@@ -351,7 +365,7 @@ export default function App() {
                 </div>
               ))}
               {showAddCrypto && (
-                <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
                   <div>
                     <label style={lbl}>Coin</label>
                     <select style={inp} value={draftCrypto.coin} onChange={e => { const coin = e.target.value; const net = (CRYPTO_NETWORKS[coin] || ["Other"])[0]; setDraftCrypto(p => ({ ...p, coin, network: net })); }}>
@@ -396,16 +410,16 @@ export default function App() {
               <div style={{ textAlign: "center", color: "var(--color-text-secondary)", padding: "40px 0", border: "0.5px dashed var(--color-border-tertiary)", borderRadius: 10 }}>No clients saved yet.</div>
             )}
             {clients.map(c => (
-              <div key={c.id} style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={c.id} style={{ ...card, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 12 : 0 }}>
                 <div>
                   <div style={{ fontWeight: 500, marginBottom: 2 }}>{c.name}</div>
                   <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>{c.email}{c.email && c.phone ? " · " : ""}{c.phone}</div>
                   {c.address && <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>{c.address.replace(/\n/g, ", ")}</div>}
                 </div>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: 16 }}>
-                  <button onClick={() => selectClientForInvoice(c)} style={btn}>Use in invoice</button>
-                  <button onClick={() => startEditClient(c)} style={btnOutline}>Edit</button>
-                  <button onClick={() => deleteClient(c.id)} style={{ ...btnOutline, borderColor: "#c0392b", color: "#c0392b" }}>Delete</button>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button onClick={() => selectClientForInvoice(c)} style={{ ...btn, fontSize: 12, padding: "6px 12px" }}>Use in invoice</button>
+                  <button onClick={() => startEditClient(c)} style={{ ...btnOutline, fontSize: 12, padding: "6px 12px" }}>Edit</button>
+                  <button onClick={() => deleteClient(c.id)} style={{ ...btnOutline, fontSize: 12, padding: "6px 12px", borderColor: "#c0392b", color: "#c0392b" }}>Delete</button>
                 </div>
               </div>
             ))}
@@ -421,7 +435,7 @@ export default function App() {
             </div>
             <div style={card}>
               <div style={{ fontWeight: 500, marginBottom: 12 }}>Contact details</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={col2}>
                 {[["Company / Client Name","name"],["Email","email"],["Phone","phone"]].map(([l, k]) => (
                   <div key={k}><label style={lbl}>{l}</label><input style={inp} value={draftClient[k] || ""} onChange={e => setDraftClient(p => ({ ...p, [k]: e.target.value }))} /></div>
                 ))}
@@ -441,7 +455,7 @@ export default function App() {
                 const hasPay = Object.entries(profPay).some(([k, v]) => k !== "method" && v);
                 if (!hasPay) return null;
                 return (
-                  <div style={{ background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 8, padding: "10px 14px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 8, padding: "10px 14px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 500 }}>Use saved {draftClient.currency} payment details</div>
                       <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 2 }}>{profPay.method}{profPay.bankName ? " · " + profPay.bankName : ""}</div>
@@ -451,11 +465,11 @@ export default function App() {
                       const updates = {};
                       fields.forEach(([, k]) => { updates["pay_" + k] = profPay[k] || ""; });
                       setDraftClient(p => ({ ...p, ...updates }));
-                    }} style={{ ...btnOutline, fontSize: 12, padding: "5px 12px", flexShrink: 0, marginLeft: 12 }}>Import</button>
+                    }} style={{ ...btnOutline, fontSize: 12, padding: "5px 12px", flexShrink: 0 }}>Import</button>
                   </div>
                 );
               })()}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={col2}>
                 {(CURRENCY_FIELDS[draftClient.currency || "GBP"] || []).map(([l, k]) => {
                   const pk = "pay_" + k;
                   return (
@@ -477,20 +491,21 @@ export default function App() {
         {/* NEW INVOICE */}
         {tab === 2 && (
           <div style={{ display: "grid", gap: 14 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 10 }}>
               <div><label style={lbl}>Invoice No.</label><input style={inp} value={inv.number} onChange={e => setInv(p => ({ ...p, number: e.target.value }))} /></div>
               <div><label style={lbl}>Date</label><input style={inp} value={inv.date} onChange={e => setInv(p => ({ ...p, date: e.target.value }))} /></div>
-              <div><label style={lbl}>Currency</label>
+              <div style={isMobile ? { gridColumn: "1/-1" } : {}}><label style={lbl}>Currency</label>
                 <select style={inp} value={inv.currency} onChange={e => setInv(p => ({ ...p, currency: e.target.value }))}>
                   {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code} — {c.name}</option>)}
                 </select>
               </div>
             </div>
+
             <div style={card}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile && clients.length > 0 ? "column" : "row", gap: 10, marginBottom: 10 }}>
                 <div style={{ fontWeight: 500 }}>Bill To</div>
                 {clients.length > 0 ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <label style={{ ...lbl, marginBottom: 0 }}>Load client:</label>
                     <select style={{ ...inp, width: "auto", padding: "4px 8px", fontSize: 12 }} value={inv.clientId || ""} onChange={e => { const c = clients.find(x => String(x.id) === e.target.value); if (c) applyClient(c); }}>
                       <option value="">— select —</option>
@@ -501,32 +516,56 @@ export default function App() {
                   <button onClick={() => { setTab(1); startNewClient(); }} style={{ ...btnOutline, fontSize: 12, padding: "5px 12px" }}>+ Save client</button>
                 )}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div style={col2}>
                 {[["Client Name","name"],["Email","email"],["Phone","phone"]].map(([l, k]) => (
                   <div key={k}><label style={lbl}>{l}</label><input style={inp} value={inv.client[k]} onChange={e => setInv(p => ({ ...p, client: { ...p.client, [k]: e.target.value } }))} /></div>
                 ))}
                 <div style={{ gridColumn: "1/-1" }}><label style={lbl}>Address</label><textarea style={{ ...inp, height: 50, resize: "vertical" }} value={inv.client.address} onChange={e => setInv(p => ({ ...p, client: { ...p.client, address: e.target.value } }))} /></div>
               </div>
             </div>
+
+            {/* LINE ITEMS */}
             <div style={card}>
               <div style={{ fontWeight: 500, marginBottom: 10 }}>Line Items</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.9fr 65px 75px 85px 24px", gap: 6, marginBottom: 6 }}>
-                {["Project","Description","Hours","Rate","Amount",""].map((h, i) => <div key={i} style={{ fontSize: 10, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</div>)}
-              </div>
-              {inv.items.map(it => (
-                <div key={it.id} style={{ display: "grid", gridTemplateColumns: "1.1fr 1.9fr 65px 75px 85px 24px", gap: 6, marginBottom: 8, alignItems: "center" }}>
-                  <input style={inp} placeholder="Project" value={it.project} onChange={e => updateItem(it.id, "project", e.target.value)} />
-                  <input style={inp} placeholder="Description" value={it.desc} onChange={e => updateItem(it.id, "desc", e.target.value)} />
-                  <input style={{ ...inp, textAlign: "center" }} type="number" min="0" placeholder="0" value={it.hours} onChange={e => updateItem(it.id, "hours", e.target.value)} />
-                  <input style={{ ...inp, textAlign: "right" }} type="number" min="0" placeholder="rate" value={it.rate} onChange={e => updateItem(it.id, "rate", e.target.value)} />
-                  <input style={{ ...inp, textAlign: "right" }} type="number" min="0" placeholder="fixed" value={it.amount} onChange={e => updateItem(it.id, "amount", e.target.value)} />
-                  <button onClick={() => removeItem(it.id)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--color-text-secondary)", fontSize: 18, padding: 0 }}>×</button>
-                </div>
-              ))}
+              {isMobile ? (
+                /* Mobile: stacked card per item */
+                inv.items.map(it => (
+                  <div key={it.id} style={{ borderBottom: "0.5px solid #e0e0e0", paddingBottom: 14, marginBottom: 14 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginBottom: 8, alignItems: "start" }}>
+                      <div><label style={lbl}>Project</label><input style={inp} placeholder="Project" value={it.project} onChange={e => updateItem(it.id, "project", e.target.value)} /></div>
+                      <button onClick={() => removeItem(it.id)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--color-text-secondary)", fontSize: 20, padding: "22px 0 0 0", lineHeight: 1 }}>×</button>
+                    </div>
+                    <div style={{ marginBottom: 8 }}><label style={lbl}>Description</label><input style={inp} placeholder="Description" value={it.desc} onChange={e => updateItem(it.id, "desc", e.target.value)} /></div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                      <div><label style={lbl}>Hours</label><input style={{ ...inp, textAlign: "center" }} type="number" min="0" placeholder="0" value={it.hours} onChange={e => updateItem(it.id, "hours", e.target.value)} /></div>
+                      <div><label style={lbl}>Rate</label><input style={{ ...inp, textAlign: "right" }} type="number" min="0" placeholder="rate" value={it.rate} onChange={e => updateItem(it.id, "rate", e.target.value)} /></div>
+                      <div><label style={lbl}>Amount</label><input style={{ ...inp, textAlign: "right" }} type="number" min="0" placeholder="fixed" value={it.amount} onChange={e => updateItem(it.id, "amount", e.target.value)} /></div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                /* Desktop: row grid */
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.9fr 65px 75px 85px 24px", gap: 6, marginBottom: 6 }}>
+                    {["Project","Description","Hours","Rate","Amount",""].map((h, i) => <div key={i} style={{ fontSize: 10, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</div>)}
+                  </div>
+                  {inv.items.map(it => (
+                    <div key={it.id} style={{ display: "grid", gridTemplateColumns: "1.1fr 1.9fr 65px 75px 85px 24px", gap: 6, marginBottom: 8, alignItems: "center" }}>
+                      <input style={inp} placeholder="Project" value={it.project} onChange={e => updateItem(it.id, "project", e.target.value)} />
+                      <input style={inp} placeholder="Description" value={it.desc} onChange={e => updateItem(it.id, "desc", e.target.value)} />
+                      <input style={{ ...inp, textAlign: "center" }} type="number" min="0" placeholder="0" value={it.hours} onChange={e => updateItem(it.id, "hours", e.target.value)} />
+                      <input style={{ ...inp, textAlign: "right" }} type="number" min="0" placeholder="rate" value={it.rate} onChange={e => updateItem(it.id, "rate", e.target.value)} />
+                      <input style={{ ...inp, textAlign: "right" }} type="number" min="0" placeholder="fixed" value={it.amount} onChange={e => updateItem(it.id, "amount", e.target.value)} />
+                      <button onClick={() => removeItem(it.id)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--color-text-secondary)", fontSize: 18, padding: 0 }}>×</button>
+                    </div>
+                  ))}
+                </>
+              )}
               <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginBottom: 8 }}>Tip: fill Amount for fixed-price items, or use Hours × Rate</div>
               <button onClick={addItem} style={{ ...btnOutline, fontSize: 12, padding: "5px 12px" }}>+ Add item</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
               <div><label style={lbl}>Deductions ({cur.symbol})</label><input style={inp} type="number" min="0" placeholder="0.00" value={inv.deductions} onChange={e => setInv(p => ({ ...p, deductions: e.target.value }))} /></div>
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
                 <div style={{ background: "var(--color-background-secondary)", borderRadius: 6, padding: "10px 14px" }}>
@@ -554,7 +593,7 @@ export default function App() {
                     const c = CURRENCIES.find(x => x.code === r.currency) || CURRENCIES[0];
                     const grand = r.grandTotal !== undefined ? r.grandTotal : (r.subtotal - (parseFloat(r.deductions) || 0));
                     return (
-                      <div key={i} style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div key={i} style={{ ...card, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 10 : 0 }}>
                         <div>
                           <div style={{ fontWeight: 500 }}>No. {r.number} — {r.client?.name || "No client"}</div>
                           <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>{r.date} · {r.currency}</div>
@@ -573,17 +612,19 @@ export default function App() {
 
         {/* PREVIEW MODAL */}
         {preview && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setPreview(null)}>
-            <div style={{ background: "#fff", borderRadius: 10, maxWidth: 860, width: "100%", maxHeight: "92vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", borderBottom: "0.5px solid #e5e5e5", background: "#fff", position: "sticky", top: 0, zIndex: 10 }}>
-                <span style={{ fontWeight: 500, color: "#111" }}>Invoice No. {preview.number}</span>
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 200, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: isMobile ? 0 : 16, overflowY: "auto" }} onClick={() => setPreview(null)}>
+            <div style={{ background: "#fff", borderRadius: isMobile ? 0 : 10, maxWidth: 860, width: "100%", minHeight: isMobile ? "100dvh" : "auto" }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "0.5px solid #e5e5e5", background: "#fff", position: "sticky", top: 0, zIndex: 10 }}>
+                <span style={{ fontWeight: 500, color: "#111", fontSize: isMobile ? 13 : 14 }}>Invoice No. {preview.number}</span>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <button onClick={downloadPdf} style={{ ...btn, fontSize: 12, padding: "6px 14px" }}>Download PDF</button>
                   <button onClick={() => setPreview(null)} style={{ ...btnOutline, fontSize: 12, padding: "6px 14px" }}>Close</button>
                 </div>
               </div>
-
-              <div id="print-area-fbi3"><InvoiceDoc r={preview} /></div>
+              {/* Scrollable invoice wrapper on mobile */}
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                <div id="print-area-fbi3"><InvoiceDoc r={preview} /></div>
+              </div>
             </div>
           </div>
         )}
