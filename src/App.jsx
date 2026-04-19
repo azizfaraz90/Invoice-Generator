@@ -11,13 +11,11 @@ const CURRENCIES = [
 ];
 
 const DEFAULT_PROFILE = {
-  name: "Faraz Been Abdul Aziz", title: "UI/UX Designer",
-  address: "Flat B6, House 348/349, Road 9, Block H, Bashundhara R/A, Dhaka, Bangladesh",
-  phone: "+88 01815196643", email: "azizfaraz90@gmail.com",
+  name: "", title: "", address: "", phone: "", email: "",
 };
 
 const DEFAULT_PAYMENTS = {
-  GBP: { method: "FPS (Faster Payments)", holder: "Faraz Been Abdul Aziz", accountNumber: "68235220", sortCode: "41307", swift: "CLJUGB21XXX", bankName: "Clear Junction Limited", bankAddress: "4th Floor Imperial House, 15 Kingsway, London, United Kingdom, WC2B 6UN" },
+  GBP: { method: "FPS (Faster Payments)", holder: "", accountNumber: "", sortCode: "", swift: "", bankName: "", bankAddress: "" },
   USD: { method: "Bank Wire / ACH", holder: "", accountType: "", accountNumber: "", routingNumber: "", swift: "", bankName: "", bankAddress: "" },
   EUR: { method: "SEPA Transfer", holder: "", iban: "", swift: "", bankName: "", bankAddress: "" },
   BDT: { method: "bKash / Nagad / Bank", bkash: "", nagad: "", accountNumber: "", bankName: "" },
