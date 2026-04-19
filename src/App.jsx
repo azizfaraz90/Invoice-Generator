@@ -147,7 +147,20 @@ export default function App() {
 
   const addItem = () => setInv(p => ({ ...p, items: [...p.items, emptyItem()] }));
   const removeItem = (id) => setInv(p => ({ ...p, items: p.items.filter(i => i.id !== id) }));
-  const updateItem = (id, f, v) => setInv(p => ({ ...p, items: p.items.map(i => i.id === id ? { ...i, [f]: v } : i) }));
+  const updateItem = (id, f, v) => setInv(p => ({
+    ...p,
+    items: p.items.map(i => {
+      if (i.id !== id) return i;
+      const next = { ...i, [f]: v };
+      if (f === "hours" || f === "rate") {
+        const h = parseFloat(f === "hours" ? v : i.hours) || 0;
+        const r = parseFloat(f === "rate" ? v : i.rate) || 0;
+        if (h > 0 && r > 0) next.amount = String(h * r);
+        else if (h === 0 || r === 0) next.amount = "";
+      }
+      return next;
+    }),
+  }));
   const nextNum = (n) => { const m = n.match(/^(0*)(\d+)$/); if (!m) return n; const nx = parseInt(m[2]) + 1; return m[1].slice(0, Math.max(0, (m[1].length + m[2].length) - String(nx).length)) + nx; };
 
   const saveInvoice = () => {
