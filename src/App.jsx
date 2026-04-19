@@ -81,7 +81,6 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [preview, setPreview] = useState(null);
   const [activeCur, setActiveCur] = useState("GBP");
-  const [htmlOutput, setHtmlOutput] = useState("");
 
   useEffect(() => {
     try { const p = localStorage.getItem("fbi3_profile"); if (p) setProfile(JSON.parse(p)); } catch {}
@@ -153,12 +152,14 @@ export default function App() {
     setTab(3);
   };
 
-  const copyHtml = () => {
+  const downloadPdf = () => {
     const el = document.getElementById("print-area-fbi3");
     const style = "*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}@page{size:A4 portrait;margin:12mm;}";
-    const head = "<!DOCTYPE html><html><head><meta charset='utf-8'><style>" + style + "</style></head><body>";
-    const foot = "</body></html>";
-    setHtmlOutput(head + el.innerHTML + foot);
+    const html = "<!DOCTYPE html><html><head><meta charset='utf-8'><style>" + style + "</style></head><body>" + el.innerHTML + "</body></html>";
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    win.addEventListener("load", () => { win.print(); URL.revokeObjectURL(url); });
   };
 
   const inp = { padding: "6px 10px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13, width: "100%", boxSizing: "border-box", background: "var(--color-background-primary)", color: "var(--color-text-primary)" };
@@ -577,23 +578,11 @@ export default function App() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", borderBottom: "0.5px solid #e5e5e5", background: "#fff", position: "sticky", top: 0, zIndex: 10 }}>
                 <span style={{ fontWeight: 500, color: "#111" }}>Invoice No. {preview.number}</span>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <button onClick={copyHtml} style={{ ...btn, fontSize: 12, padding: "6px 14px" }}>Export HTML</button>
-                  <button onClick={() => { setPreview(null); setHtmlOutput(""); }} style={{ ...btnOutline, fontSize: 12, padding: "6px 14px" }}>Close</button>
+                  <button onClick={downloadPdf} style={{ ...btn, fontSize: 12, padding: "6px 14px" }}>Download PDF</button>
+                  <button onClick={() => setPreview(null)} style={{ ...btnOutline, fontSize: 12, padding: "6px 14px" }}>Close</button>
                 </div>
               </div>
-              {htmlOutput && (
-                <div style={{ padding: "12px 20px", borderBottom: "0.5px solid #e5e5e5", background: "#f9fafb" }}>
-                  <div style={{ fontSize: 12, color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6, padding: "8px 12px", marginBottom: 8 }}>
-                    Select all the text below (Ctrl+A / Cmd+A), copy it, paste into a file called <strong>invoice.html</strong>, open in browser, then Ctrl+P → Save as PDF.
-                  </div>
-                  <textarea
-                    readOnly
-                    value={htmlOutput}
-                    onFocus={e => e.target.select()}
-                    style={{ width: "100%", height: 120, fontSize: 11, fontFamily: "monospace", border: "1px solid #ccc", borderRadius: 5, padding: "8px", boxSizing: "border-box", resize: "none", background: "#fff", color: "#333" }}
-                  />
-                </div>
-              )}
+
               <div id="print-area-fbi3"><InvoiceDoc r={preview} /></div>
             </div>
           </div>
